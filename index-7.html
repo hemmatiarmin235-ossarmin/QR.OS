@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="description" content="QR.OS - استودیو حرفه‌ای ساخت و اسکن QR Code" />
+  <title>QR.OS — Smart QR Code Studio</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.468.0"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #12121a;
+      --card: rgba(255,255,255,0.04);
+      --card-border: rgba(255,255,255,0.08);
+      --text: #e8e8ed;
+      --text-muted: #9898a6;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+      --glass: blur(16px);
+      --sidebar-w: 260px;
+      --nav-h: 64px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    [data-theme="light"] {
+      --bg: #f4f4f8;
+      --bg2: #ffffff;
+      --card: rgba(255,255,255,0.7);
+      --card-border: rgba(0,0,0,0.08);
+      --text: #1a1a2e;
+      --text-muted: #6b6b7b;
+      --shadow: 0 8px 32px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: 'Vazirmatn', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -20%, rgba(99,102,241,0.15), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(139,92,246,0.1), transparent);
+      background-attachment: fixed;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: 15px;
+    }
+    /* Layout */
+    .app {
+      display: flex;
+      min-height: 100dvh;
+    }
+    .sidebar {
+      display: none;
+      width: var(--sidebar-w);
+      background: var(--bg2);
+      border-left: 1px solid var(--card-border);
+      flex-direction: column;
+      padding: 24px 16px;
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #a5b4fc, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .sidebar-tag {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+      width: 100%;
+      text-align: right;
+      margin-bottom: 4px;
+    }
+    .nav-item:hover, .nav-item.active {
+      background: var(--card);
+      color: var(--text);
+    }
+    .nav-item.active {
+      background: rgba(99,102,241,0.15);
+      color: var(--accent-hover);
+    }
+    .nav-item i, .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .main {
+      flex: 1;
+      padding: 20px 16px calc(var(--nav-h) + 24px + var(--safe-bottom));
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    @media (min-width: 900px) {
+      .sidebar { display: flex; }
+      .main {
+        margin-right: var(--sidebar-w);
+        padding: 32px 40px 40px;
+      }
+      .bottom-nav { display: none !important; }
+    }
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + var(--safe-bottom));
+      background: rgba(18,18,26,0.92);
+      backdrop-filter: var(--glass);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 10px;
+      padding-bottom: var(--safe-bottom);
+      z-index: 90;
+    }
+    [data-theme="light"] .bottom-nav {
+      background: rgba(255,255,255,0.92);
+    }
+    .bn-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 4px 8px;
+      min-width: 56px;
+      transition: color 0.2s;
+    }
+    .bn-item.active { color: var(--accent-hover); }
+    .bn-item svg { width: 22px; height: 22px; }
+    /* Cards & UI */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      backdrop-filter: var(--glass);
+      box-shadow: var(--shadow);
+    }
+    .glass {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      backdrop-filter: var(--glass);
+    }
+    h1, h2, h3 { font-weight: 600; }
+    .page { display: none; animation: fadeIn 0.25s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.18s;
+      min-height: 44px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.08); }
+    .btn-danger {
+      background: rgba(239,68,68,0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+    .btn-sm { padding: 8px 14px; font-size: 13px; min-height: 36px; }
+    .btn-block { width: 100%; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+      background: rgba(0,0,0,0.25);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    [data-theme="light"] input,
+    [data-theme="light"] select,
+    [data-theme="light"] textarea {
+      background: rgba(0,0,0,0.04);
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 500px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+    /* Toast */
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: min(90vw, 360px);
+    }
+    .toast {
+      background: var(--bg2);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow);
+      animation: toastIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+    .toast.success { border-color: rgba(34,197,94,0.4); }
+    .toast.error { border-color: rgba(239,68,68,0.4); }
+    .toast.warning { border-color: rgba(245,158,11,0.4); }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: none; }
+    }
+    /* Dashboard */
+    .dash-header { margin-bottom: 28px; }
+    .dash-header h1 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #c7d2fe, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .dash-header p { color: var(--text-muted); margin-top: 4px; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (min-width: 600px) {
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .stat-card {
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-card .num {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--accent-hover);
+    }
+    .stat-card .lbl {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    @media (min-width: 500px) {
+      .action-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .action-btn {
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .action-btn:hover { transform: translateY(-2px); background: rgba(99,102,241,0.1); }
+    .action-btn svg { width: 28px; height: 28px; margin-bottom: 8px; color: var(--accent-hover); }
+    .action-btn span { display: block; font-weight: 500; }
+    .section-title {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      color: var(--text-muted);
+    }
+    /* Generator layout */
+    .gen-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    @media (min-width: 900px) {
+      .gen-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px 280px;
+        gap: 24px;
+        align-items: start;
+      }
+    }
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .type-btn {
+      padding: 12px 8px;
+      text-align: center;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--card-border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .type-btn:hover, .type-btn.active {
+      border-color: var(--accent);
+      color: var(--accent-hover);
+      background: rgba(99,102,241,0.1);
+    }
+    .type-btn svg { width: 20px; height: 20px; margin-bottom: 4px; display: block; margin-inline: auto; }
+    .preview-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 20px;
+    }
+    #qr-preview {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 260px;
+      min-width: 260px;
+    }
+    #qr-preview canvas, #qr-preview svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .preview-meta {
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      word-break: break-all;
+      max-width: 280px;
+    }
+    .preview-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    /* Customization */
+    .custom-panel .form-group { margin-bottom: 14px; }
+    .color-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .color-row input[type="color"] {
+      width: 44px;
+      height: 44px;
+      padding: 2px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid var(--card-border);
+    }
+    .style-options {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .style-opt {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .style-opt.active {
+      border-color: var(--accent);
+      color: var(--accent-hover);
+      background: rgba(99,102,241,0.12);
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .toggle {
+      width: 48px;
+      height: 28px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.1);
+      position: relative;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px;
+      right: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle.on::after { transform: translateX(-20px); }
+    /* Scanner */
+    .scanner-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 1;
+    }
+    #reader {
+      width: 100%;
+      height: 100%;
+    }
+    #reader video {
+      object-fit: cover !important;
+      border-radius: var(--radius);
+    }
+    .scan-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .scan-frame {
+      width: 70%;
+      height: 70%;
+      border: 2px solid rgba(99,102,241,0.8);
+      border-radius: 16px;
+      position: relative;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+    }
+    .scan-line {
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanMove 2s ease-in-out infinite;
+    }
+    @keyframes scanMove {
+      0%, 100% { top: 10%; }
+      50% { top: 90%; }
+    }
+    .scan-hint {
+      text-align: center;
+      margin-top: 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .scan-result {
+      margin-top: 20px;
+      display: none;
+    }
+    .scan-result.show { display: block; }
+    .scan-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    /* History / Saved */
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .list-item:hover { background: rgba(255,255,255,0.05); }
+    .list-item .thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .list-item .thumb canvas, .list-item .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .list-item .info { flex: 1; min-width: 0; }
+    .list-item .info .title {
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .list-item .info .meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .list-item .actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+    /* Settings */
+    .settings-section {
+      margin-bottom: 28px;
+    }
+    .settings-section h3 {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: var(--text-muted);
+    }
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 420px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal h3 { margin-bottom: 16px; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    /* Utility */
+    .hidden { display: none !important; }
+    .mt-2 { margin-top: 8px; }
+    .mt-3 { margin-top: 12px; }
+    .mt-4 { margin-top: 16px; }
+    .mb-2 { margin-bottom: 8px; }
+    .text-muted { color: var(--text-muted); }
+    .text-sm { font-size: 13px; }
+    .flex { display: flex; }
+    .gap-2 { gap: 8px; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .w-full { width: 100%; }
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0);
+      border: 0;
+    }
+    /* Logo upload preview */
+    #logo-preview {
+      max-width: 64px;
+      max-height: 64px;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: none;
+    }
+    #logo-preview.show { display: block; }
+    /* About */
+    .about-box {
+      text-align: center;
+      padding: 24px;
+    }
+    .about-box .logo {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a5b4fc, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div id="toast-container"></div>
+
+  <div class="app">
+    <!-- Sidebar Desktop -->
+    <aside class="sidebar" aria-label="منوی اصلی">
+      <div class="sidebar-logo">QR.OS</div>
+      <div class="sidebar-tag">Smart QR Code Studio</div>
+      <nav>
+        <button class="nav-item active" data-page="dashboard" aria-label="داشبورد">
+          <i data-lucide="layout-dashboard"></i> داشبورد
+        </button>
+        <button class="nav-item" data-page="generate" aria-label="ساخت QR">
+          <i data-lucide="qr-code"></i> ساخت QR
+        </button>
+        <button class="nav-item" data-page="scan" aria-label="اسکنر">
+          <i data-lucide="scan"></i> اسکنر
+        </button>
+        <button class="nav-item" data-page="history" aria-label="تاریخچه">
+          <i data-lucide="history"></i> تاریخچه
+        </button>
+        <button class="nav-item" data-page="saved" aria-label="ذخیره‌شده‌ها">
+          <i data-lucide="bookmark"></i> ذخیره‌شده‌ها
+        </button>
+        <button class="nav-item" data-page="settings" aria-label="تنظیمات">
+          <i data-lucide="settings"></i> تنظیمات
+        </button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <!-- ========== DASHBOARD ========== -->
+      <section id="page-dashboard" class="page active">
+        <div class="dash-header">
+          <h1>QR.OS</h1>
+          <p>استودیو حرفه‌ای ساخت و اسکن QR Code</p>
+        </div>
+        <div class="stats-grid">
+          <div class="card stat-card">
+            <div class="num" id="stat-created">0</div>
+            <div class="lbl">ساخته‌شده</div>
+          </div>
+          <div class="card stat-card">
+            <div class="num" id="stat-scanned">0</div>
+            <div class="lbl">اسکن‌شده</div>
+          </div>
+          <div class="card stat-card">
+            <div class="num" id="stat-saved">0</div>
+            <div class="lbl">ذخیره‌شده</div>
+          </div>
+          <div class="card stat-card">
+            <div class="num" id="stat-last" style="font-size:0.9rem">—</div>
+            <div class="lbl">آخرین فعالیت</div>
+          </div>
+        </div>
+        <div class="action-grid">
+          <div class="card action-btn" data-goto="generate" role="button" tabindex="0">
+            <i data-lucide="plus-circle"></i>
+            <span>ساخت QR</span>
+          </div>
+          <div class="card action-btn" data-goto="scan" role="button" tabindex="0">
+            <i data-lucide="scan-line"></i>
+            <span>اسکن QR</span>
+          </div>
+          <div class="card action-btn" data-goto="history" role="button" tabindex="0">
+            <i data-lucide="clock"></i>
+            <span>تاریخچه</span>
+          </div>
+        </div>
+        <h3 class="section-title">آخرین QRها</h3>
+        <div id="recent-list"></div>
+      </section>
+
+      <!-- ========== GENERATE ========== -->
+      <section id="page-generate" class="page">
+        <h2 style="margin-bottom:20px">ساخت QR Code</h2>
+        <div class="gen-layout">
+          <div class="gen-left">
+            <div class="card" style="margin-bottom:16px">
+              <h3 class="section-title">نوع اطلاعات</h3>
+              <div class="type-grid" id="type-grid"></div>
+            </div>
+            <div class="card">
+              <div id="type-form"></div>
+            </div>
+          </div>
+          <div class="preview-box card">
+            <div id="qr-preview"></div>
+            <div class="preview-meta" id="preview-meta">پیش‌نمایش QR</div>
+            <div class="preview-actions">
+              <button class="btn btn-primary btn-sm" id="btn-dl-png" aria-label="دانلود PNG">
+                <i data-lucide="download"></i> PNG
+              </button>
+              <button class="btn btn-ghost btn-sm" id="btn-dl-svg" aria-label="دانلود SVG">
+                <i data-lucide="file-code"></i> SVG
+              </button>
+              <button class="btn btn-ghost btn-sm" id="btn-copy-data" aria-label="کپی اطلاعات">
+                <i data-lucide="copy"></i> کپی
+              </button>
+              <button class="btn btn-ghost btn-sm" id="btn-save-qr" aria-label="ذخیره QR">
+                <i data-lucide="bookmark"></i> ذخیره
+              </button>
+            </div>
+          </div>
+          <div class="custom-panel card">
+            <h3 class="section-title">شخصی‌سازی</h3>
+            <div class="form-group">
+              <label>اندازه</label>
+              <select id="qr-size">
+                <option value="256">256</option>
+                <option value="512" selected>512</option>
+                <option value="1024">1024</option>
+                <option value="2048">2048</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>سطح تصحیح خطا</label>
+              <select id="qr-ec">
+                <option value="L">Low (۷٪)</option>
+                <option value="M" selected>Medium (۱۵٪)</option>
+                <option value="Q">Quartile (۲۵٪)</option>
+                <option value="H">High (۳۰٪)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>رنگ QR</label>
+              <div class="color-row">
+                <input type="color" id="qr-fg" value="#000000" />
+                <input type="text" id="qr-fg-hex" value="#000000" style="flex:1" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>رنگ پس‌زمینه</label>
+              <div class="color-row">
+                <input type="color" id="qr-bg" value="#ffffff" />
+                <input type="text" id="qr-bg-hex" value="#ffffff" style="flex:1" />
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="toggle-row">
+                <label style="margin:0">پس‌زمینه شفاف</label>
+                <button type="button" class="toggle" id="qr-transparent" aria-label="پس‌زمینه شفاف"></button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>سبک نقاط</label>
+              <div class="style-options" id="dots-style">
+                <button type="button" class="style-opt active" data-v="square">مربع</button>
+                <button type="button" class="style-opt" data-v="rounded">گرد</button>
+                <button type="button" class="style-opt" data-v="dots">نقطه‌ای</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>سبک گوشه‌ها</label>
+              <div class="style-options" id="corner-style">
+                <button type="button" class="style-opt active" data-v="square">مربع</button>
+                <button type="button" class="style-opt" data-v="extra-rounded">گرد</button>
+                <button type="button" class="style-opt" data-v="dot">دایره‌ای</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>لوگو در مرکز</label>
+              <input type="file" id="logo-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" />
+              <img id="logo-preview" alt="پیش‌نمایش لوگو" />
+              <button type="button" class="btn btn-ghost btn-sm mt-2 hidden" id="btn-remove-logo">حذف لوگو</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== SCAN ========== -->
+      <section id="page-scan" class="page">
+        <h2 style="margin-bottom:20px">اسکن QR Code</h2>
+        <div class="card" style="margin-bottom:16px">
+          <div class="scan-controls" style="margin-top:0;margin-bottom:16px">
+            <button class="btn btn-primary" id="btn-start-cam">
+              <i data-lucide="camera"></i> شروع دوربین
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-stop-cam">
+              <i data-lucide="camera-off"></i> توقف
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-switch-cam">
+              <i data-lucide="switch-camera"></i> تعویض
+            </button>
+            <button class="btn btn-ghost hidden" id="btn-torch">
+              <i data-lucide="flashlight"></i> چراغ
+            </button>
+          </div>
+          <div class="scanner-wrap" id="scanner-wrap">
+            <div id="reader"></div>
+            <div class="scan-overlay">
+              <div class="scan-frame">
+                <div class="scan-line"></div>
+              </div>
+            </div>
+          </div>
+          <p class="scan-hint">دوربین را روی QR Code قرار دهید</p>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <h3 class="section-title">اسکن از تصویر</h3>
+          <input type="file" id="scan-image-input" accept="image/png,image/jpeg,image/jpg,image/webp" />
+        </div>
+        <div class="card scan-result" id="scan-result">
+          <h3 class="section-title">نتیجه اسکن</h3>
+          <div class="form-group">
+            <label>نوع</label>
+            <div id="scan-type" class="text-sm"></div>
+          </div>
+          <div class="form-group">
+            <label>محتوا</label>
+            <div id="scan-content" style="word-break:break-all;white-space:pre-wrap;font-size:14px;background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;max-height:200px;overflow:auto"></div>
+          </div>
+          <div class="scan-controls">
+            <button class="btn btn-primary btn-sm hidden" id="btn-open-link">
+              <i data-lucide="external-link"></i> باز کردن لینک
+            </button>
+            <button class="btn btn-ghost btn-sm" id="btn-copy-scan">
+              <i data-lucide="copy"></i> کپی
+            </button>
+            <button class="btn btn-ghost btn-sm" id="btn-rescan">
+              <i data-lucide="refresh-cw"></i> اسکن دوباره
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== HISTORY ========== -->
+      <section id="page-history" class="page">
+        <div class="flex justify-between items-center mb-2" style="margin-bottom:16px">
+          <h2>تاریخچه</h2>
+          <button class="btn btn-danger btn-sm" id="btn-clear-history">پاک کردن همه</button>
+        </div>
+        <div id="history-list"></div>
+      </section>
+
+      <!-- ========== SAVED ========== -->
+      <section id="page-saved" class="page">
+        <h2 style="margin-bottom:16px">QRهای ذخیره‌شده</h2>
+        <div id="saved-list"></div>
+      </section>
+
+      <!-- ========== SETTINGS ========== -->
+      <section id="page-settings" class="page">
+        <h2 style="margin-bottom:20px">تنظیمات</h2>
+        <div class="card settings-section">
+          <h3>ظاهر</h3>
+          <div class="setting-row">
+            <span>تم روشن / تاریک</span>
+            <button type="button" class="toggle" id="theme-toggle" aria-label="تغییر تم"></button>
+          </div>
+          <div class="setting-row">
+            <span>زبان</span>
+            <select id="lang-select" style="width:auto;min-width:120px">
+              <option value="fa">فارسی</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+        </div>
+        <div class="card settings-section">
+          <h3>پشتیبان‌گیری</h3>
+          <div class="setting-row">
+            <span>خروجی گرفتن از اطلاعات</span>
+            <button class="btn btn-ghost btn-sm" id="btn-export">Export JSON</button>
+          </div>
+          <div class="setting-row">
+            <span>وارد کردن Backup</span>
+            <button class="btn btn-ghost btn-sm" id="btn-import">Import JSON</button>
+            <input type="file" id="import-file" accept=".json,application/json" class="hidden" />
+          </div>
+        </div>
+        <div class="card settings-section">
+          <h3>مدیریت داده</h3>
+          <div class="setting-row">
+            <span>پاک کردن تمام اطلاعات</span>
+            <button class="btn btn-danger btn-sm" id="btn-clear-all">حذف همه</button>
+          </div>
+        </div>
+        <div class="card about-box">
+          <div class="logo">QR.OS</div>
+          <p class="text-muted mt-2">Smart QR Code Studio</p>
+          <p class="text-sm mt-3" style="max-width:320px;margin-inline:auto">
+            ساخت، شخصی‌سازی و اسکن QR Code مستقیماً در مرورگر.
+          </p>
+          <ul class="text-sm text-muted mt-3" style="list-style:none;line-height:1.8">
+            <li>✓ بدون حساب کاربری</li>
+            <li>✓ بدون Backend</li>
+            <li>✓ Local-First</li>
+            <li>✓ Privacy Focused</li>
+          </ul>
+          <p class="text-sm mt-4 text-muted">
+            اطلاعات QR شما به‌صورت محلی روی دستگاه پردازش و ذخیره می‌شود.
+            لینک‌های اسکن‌شده بدون تأیید شما باز نمی‌شوند.
+          </p>
+          <p class="text-sm mt-3">Creator: <strong>ARMIN / MR.GROOT</strong></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bottom Nav Mobile -->
+  <nav class="bottom-nav" aria-label="ناوبری موبایل">
+    <button class="bn-item active" data-page="dashboard">
+      <i data-lucide="home"></i>
+      <span>خانه</span>
+    </button>
+    <button class="bn-item" data-page="generate">
+      <i data-lucide="qr-code"></i>
+      <span>ساخت</span>
+    </button>
+    <button class="bn-item" data-page="scan">
+      <i data-lucide="scan"></i>
+      <span>اسکن</span>
+    </button>
+    <button class="bn-item" data-page="history">
+      <i data-lucide="history"></i>
+      <span>تاریخچه</span>
+    </button>
+    <button class="bn-item" data-page="settings">
+      <i data-lucide="settings"></i>
+      <span>تنظیمات</span>
+    </button>
+  </nav>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+      <div class="modal-actions" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <script>
+  // ============================================================
+  // STATE
+  // ============================================================
+  const STATE = {
+    page: 'dashboard',
+    qrType: 'text',
+    qrData: '',
+    qrInstance: null,
+    logoDataUrl: null,
+    transparentBg: false,
+    dotsType: 'square',
+    cornersType: 'square',
+    size: 512,
+    ecLevel: 'M',
+    fgColor: '#000000',
+    bgColor: '#ffffff',
+    history: [],
+    saved: [],
+    stats: { created: 0, scanned: 0, lastActivity: null },
+    lang: 'fa',
+    theme: 'dark',
+    scanner: null,
+    cameras: [],
+    currentCam: 0,
+    torchOn: false,
+    lastScan: null,
+    debounceTimer: null
+  };
+
+  const STORAGE_KEYS = {
+    history: 'qros_history',
+    saved: 'qros_saved',
+    stats: 'qros_stats',
+    settings: 'qros_settings'
+  };
+
+  // ============================================================
+  // QR TYPES
+  // ============================================================
+  const QR_TYPES = [
+    { id: 'text', label: 'متن', icon: 'type' },
+    { id: 'url', label: 'لینک', icon: 'link' },
+    { id: 'email', label: 'ایمیل', icon: 'mail' },
+    { id: 'phone', label: 'تلفن', icon: 'phone' },
+    { id: 'sms', label: 'پیامک', icon: 'message-square' },
+    { id: 'vcard', label: 'مخاطب', icon: 'contact' },
+    { id: 'wifi', label: 'Wi-Fi', icon: 'wifi' },
+    { id: 'geo', label: 'موقعیت', icon: 'map-pin' },
+    { id: 'event', label: 'رویداد', icon: 'calendar' },
+    { id: 'whatsapp', label: 'واتساپ', icon: 'message-circle' },
+    { id: 'social', label: 'شبکه اجتماعی', icon: 'share-2' },
+    { id: 'bitcoin', label: 'Bitcoin', icon: 'bitcoin' },
+    { id: 'ethereum', label: 'Ethereum', icon: 'hexagon' },
+    { id: 'upi', label: 'UPI', icon: 'credit-card' },
+    { id: 'app', label: 'لینک اپ', icon: 'smartphone' },
+    { id: 'json', label: 'JSON', icon: 'braces' },
+    { id: 'custom', label: 'سفارشی', icon: 'code' }
+  ];
+
+  const SOCIAL_PRESETS = [
+    { id: 'instagram', label: 'Instagram', prefix: 'https://instagram.com/' },
+    { id: 'telegram', label: 'Telegram', prefix: 'https://t.me/' },
+    { id: 'x', label: 'X / Twitter', prefix: 'https://x.com/' },
+    { id: 'youtube', label: 'YouTube', prefix: 'https://youtube.com/' },
+    { id: 'tiktok', label: 'TikTok', prefix: 'https://tiktok.com/@' },
+    { id: 'linkedin', label: 'LinkedIn', prefix: 'https://linkedin.com/in/' },
+    { id: 'github', label: 'GitHub', prefix: 'https://github.com/' },
+    { id: 'facebook', label: 'Facebook', prefix: 'https://facebook.com/' },
+    { id: 'discord', label: 'Discord', prefix: 'https://discord.gg/' }
+  ];
+
+  // ============================================================
+  // STORAGE
+  // ============================================================
+  function loadStorage() {
+    try {
+      STATE.history = JSON.parse(localStorage.getItem(STORAGE_KEYS.history) || '[]');
+      STATE.saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved) || '[]');
+      const stats = JSON.parse(localStorage.getItem(STORAGE_KEYS.stats) || '{}');
+      STATE.stats = { created: stats.created || 0, scanned: stats.scanned || 0, lastActivity: stats.lastActivity || null };
+      const settings = JSON.parse(localStorage.getItem(STORAGE_KEYS.settings) || '{}');
+      STATE.lang = settings.lang || 'fa';
+      STATE.theme = settings.theme || 'dark';
+    } catch (e) {
+      console.warn('Storage load error', e);
+    }
+  }
+
+  function saveHistory() {
+    localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(STATE.history.slice(0, 200)));
+  }
+  function saveSaved() {
+    localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(STATE.saved.slice(0, 100)));
+  }
+  function saveStats() {
+    localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(STATE.stats));
+  }
+  function saveSettings() {
+    localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify({ lang: STATE.lang, theme: STATE.theme }));
+  }
+
+  // ============================================================
+  // VALIDATION
+  // ============================================================
+  function isValidUrl(str) {
+    try {
+      const u = new URL(str.startsWith('http') ? str : 'https://' + str);
+      return u.hostname.includes('.') || u.hostname === 'localhost';
+    } catch { return false; }
+  }
+  function normalizeUrl(str) {
+    str = str.trim();
+    if (!str) return '';
+    if (!/^https?:\/\//i.test(str)) str = 'https://' + str;
+    return str;
+  }
+  function isValidEmail(e) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  }
+  function isValidPhone(p) {
+    return /^[+]?[\d\s\-()]{7,20}$/.test(p);
+  }
+  function isValidCoord(n) {
+    const v = parseFloat(n);
+    return !isNaN(v) && isFinite(v);
+  }
+
+  // ============================================================
+  // QR DATA BUILDERS
+  // ============================================================
+  function buildQrData() {
+    const form = document.getElementById('type-form');
+    if (!form) return '';
+    const get = (id) => {
+      const el = form.querySelector('#' + id);
+      return el ? el.value.trim() : '';
+    };
+    const type = STATE.qrType;
+
+    switch (type) {
+      case 'text':
+        return get('f-text');
+      case 'url': {
+        const raw = get('f-url');
+        if (!raw) return '';
+        const url = normalizeUrl(raw);
+        if (!isValidUrl(url)) {
+          showToast('آدرس URL نامعتبر است', 'error');
+          return null;
+        }
+        return url;
+      }
+      case 'email': {
+        const email = get('f-email');
+        if (!email || !isValidEmail(email)) {
+          showToast('ایمیل نامعتبر است', 'error');
+          return null;
+        }
+        const sub = encodeURIComponent(get('f-subject'));
+        const body = encodeURIComponent(get('f-body'));
+        let m = 'mailto:' + email;
+        const params = [];
+        if (sub) params.push('subject=' + sub);
+        if (body) params.push('body=' + body);
+        if (params.length) m += '?' + params.join('&');
+        return m;
+      }
+      case 'phone': {
+        const p = get('f-phone');
+        if (!p || !isValidPhone(p)) {
+          showToast('شماره تلفن نامعتبر است', 'error');
+          return null;
+        }
+        return 'tel:' + p.replace(/\s/g, '');
+      }
+      case 'sms': {
+        const p = get('f-sms-phone');
+        if (!p || !isValidPhone(p)) {
+          showToast('شماره تلفن نامعتبر است', 'error');
+          return null;
+        }
+        const msg = get('f-sms-body');
+        return 'sms:' + p.replace(/\s/g, '') + (msg ? '?body=' + encodeURIComponent(msg) : '');
+      }
+      case 'vcard': {
+        const fn = get('f-fn');
+        const ln = get('f-ln');
+        if (!fn && !ln) {
+          showToast('حداقل نام یا نام خانوادگی لازم است', 'error');
+          return null;
+        }
+        let v = 'BEGIN:VCARD\nVERSION:3.0\n';
+        v += 'N:' + ln + ';' + fn + ';;;\n';
+        v += 'FN:' + (fn + ' ' + ln).trim() + '\n';
+        if (get('f-org')) v += 'ORG:' + get('f-org') + '\n';
+        if (get('f-title')) v += 'TITLE:' + get('f-title') + '\n';
+        if (get('f-tel')) v += 'TEL:' + get('f-tel') + '\n';
+        if (get('f-email')) v += 'EMAIL:' + get('f-email') + '\n';
+        if (get('f-url')) v += 'URL:' + get('f-url') + '\n';
+        if (get('f-addr')) v += 'ADR:;;' + get('f-addr') + ';;;;\n';
+        if (get('f-note')) v += 'NOTE:' + get('f-note') + '\n';
+        v += 'END:VCARD';
+        return v;
+      }
+      case 'wifi': {
+        const ssid = get('f-ssid');
+        if (!ssid) {
+          showToast('نام شبکه (SSID) الزامی است', 'error');
+          return null;
+        }
+        const pass = get('f-pass');
+        const enc = get('f-enc') || 'WPA';
+        const hidden = form.querySelector('#f-hidden')?.classList.contains('on') ? 'true' : 'false';
+        let s = 'WIFI:T:' + (enc === 'nopass' ? 'nopass' : enc) + ';S:' + ssid + ';';
+        if (enc !== 'nopass' && pass) s += 'P:' + pass + ';';
+        if (hidden === 'true') s += 'H:true;';
+        s += ';';
+        return s;
+      }
+      case 'geo': {
+        const lat = get('f-lat');
+        const lng = get('f-lng');
+        if (!isValidCoord(lat) || !isValidCoord(lng)) {
+          showToast('مختصات نامعتبر است', 'error');
+          return null;
+        }
+        const name = get('f-place');
+        return 'geo:' + lat + ',' + lng + (name ? '?q=' + encodeURIComponent(name) : '');
+      }
+      case 'event': {
+        const title = get('f-ev-title');
+        if (!title) {
+          showToast('عنوان رویداد الزامی است', 'error');
+          return null;
+        }
+        const start = get('f-ev-start-date') + 'T' + (get('f-ev-start-time') || '00:00') + ':00';
+        const end = get('f-ev-end-date') + 'T' + (get('f-ev-end-time') || '23:59') + ':00';
+        const loc = get('f-ev-loc');
+        const desc = get('f-ev-desc');
+        let ics = 'BEGIN:VEVENT\nSUMMARY:' + title + '\n';
+        ics += 'DTSTART:' + start.replace(/[-:]/g, '') + '\n';
+        if (get('f-ev-end-date')) ics += 'DTEND:' + end.replace(/[-:]/g, '') + '\n';
+        if (loc) ics += 'LOCATION:' + loc + '\n';
+        if (desc) ics += 'DESCRIPTION:' + desc + '\n';
+        ics += 'END:VEVENT';
+        return ics;
+      }
+      case 'whatsapp': {
+        let phone = get('f-wa-phone').replace(/\D/g, '');
+        if (!phone) {
+          showToast('شماره تلفن الزامی است', 'error');
+          return null;
+        }
+        const msg = get('f-wa-msg');
+        return 'https://wa.me/' + phone + (msg ? '?text=' + encodeURIComponent(msg) : '');
+      }
+      case 'social': {
+        const net = get('f-social-net');
+        const user = get('f-social-user');
+        if (!user) {
+          showToast('نام کاربری یا URL الزامی است', 'error');
+          return null;
+        }
+        if (user.startsWith('http')) return user;
+        const preset = SOCIAL_PRESETS.find(p => p.id === net);
+        return preset ? preset.prefix + user.replace(/^@/, '') : user;
+      }
+      case 'bitcoin': {
+        const addr = get('f-btc-addr');
+        if (!addr) {
+          showToast('آدرس Bitcoin الزامی است', 'error');
+          return null;
+        }
+        let uri = 'bitcoin:' + addr;
+        const amount = get('f-btc-amount');
+        const label = get('f-btc-msg');
+        const params = [];
+        if (amount) params.push('amount=' + amount);
+        if (label) params.push('label=' + encodeURIComponent(label));
+        if (params.length) uri += '?' + params.join('&');
+        return uri;
+      }
+      case 'ethereum': {
+        const addr = get('f-eth-addr');
+        if (!addr) {
+          showToast('آدرس Ethereum الزامی است', 'error');
+          return null;
+        }
+        let uri = 'ethereum:' + addr;
+        const amount = get('f-eth-amount');
+        if (amount) uri += '?value=' + amount;
+        return uri;
+      }
+      case 'upi': {
+        const pa = get('f-upi-id');
+        if (!pa) {
+          showToast('UPI ID الزامی است', 'error');
+          return null;
+        }
+        let uri = 'upi://pay?pa=' + encodeURIComponent(pa);
+        if (get('f-upi-name')) uri += '&pn=' + encodeURIComponent(get('f-upi-name'));
+        if (get('f-upi-amount')) uri += '&am=' + get('f-upi-amount');
+        if (get('f-upi-note')) uri += '&tn=' + encodeURIComponent(get('f-upi-note'));
+        return uri;
+      }
+      case 'app': {
+        const link = get('f-app-link');
+        if (!link) return '';
+        return normalizeUrl(link);
+      }
+      case 'json':
+      case 'custom':
+        return get('f-custom');
+      default:
+        return '';
+    }
+  }
+
+  // ============================================================
+  // QR GENERATOR
+  // ============================================================
+  function updateQrPreview() {
+    clearTimeout(STATE.debounceTimer);
+    STATE.debounceTimer = setTimeout(() => {
+      const data = buildQrData();
+      if (data === null) return;
+      if (!data) {
+        document.getElementById('qr-preview').innerHTML = '<span class="text-muted text-sm">داده‌ای وارد نشده</span>';
+        document.getElementById('preview-meta').textContent = 'پیش‌نمایش QR';
+        STATE.qrData = '';
+        return;
+      }
+      STATE.qrData = data;
+      renderQr(data);
+      const typeLabel = QR_TYPES.find(t => t.id === STATE.qrType)?.label || STATE.qrType;
+      const preview = data.length > 60 ? data.slice(0, 57) + '…' : data;
+      document.getElementById('preview-meta').textContent = typeLabel + ' · ' + preview;
+    }, 180);
+  }
+
+  function renderQr(data) {
+    const container = document.getElementById('qr-preview');
+    container.innerHTML = '';
+    const size = Math.min(STATE.size, 320);
+    const opts = {
+      width: size,
+      height: size,
+      type: 'canvas',
+      data: data,
+      margin: 8,
+      qrOptions: {
+        errorCorrectionLevel: STATE.logoDataUrl ? 'H' : STATE.ecLevel
+      },
+      dotsOptions: {
+        color: STATE.fgColor,
+        type: STATE.dotsType
+      },
+      backgroundOptions: {
+        color: STATE.transparentBg ? 'transparent' : STATE.bgColor
+      },
+      cornersSquareOptions: {
+        type: STATE.cornersType === 'square' ? 'square' : (STATE.cornersType === 'extra-rounded' ? 'extra-rounded' : 'dot'),
+        color: STATE.fgColor
+      },
+      cornersDotOptions: {
+        type: STATE.cornersType === 'dot' ? 'dot' : 'square',
+        color: STATE.fgColor
+      }
+    };
+    if (STATE.logoDataUrl) {
+      opts.image = STATE.logoDataUrl;
+      opts.imageOptions = {
+        crossOrigin: 'anonymous',
+        margin: 6,
+        imageSize: 0.28,
+        hideBackgroundDots: true
+      };
+    }
+    try {
+      STATE.qrInstance = new QRCodeStyling(opts);
+      STATE.qrInstance.append(container);
+    } catch (e) {
+      console.error(e);
+      showToast('خطا در ساخت QR', 'error');
+    }
+  }
+
+  async function downloadQr(ext) {
+    if (!STATE.qrData || !STATE.qrInstance) {
+      showToast('ابتدا QR بسازید', 'warning');
+      return;
+    }
+    const name = 'QR-' + STATE.qrType.toUpperCase() + '-' + new Date().toISOString().slice(0, 10);
+    try {
+      if (ext === 'svg') {
+        await STATE.qrInstance.download({ name, extension: 'svg' });
+      } else {
+        // high quality PNG
+        const full = new QRCodeStyling({
+          ...STATE.qrInstance._options,
+          width: STATE.size,
+          height: STATE.size,
+          type: 'canvas'
+        });
+        await full.download({ name, extension: 'png' });
+      }
+      showToast('دانلود آغاز شد', 'success');
+      addToHistory('created', STATE.qrType, STATE.qrData);
+    } catch (e) {
+      console.error(e);
+      showToast('خطا در دانلود', 'error');
+    }
+  }
+
+  function copyQrData() {
+    if (!STATE.qrData) {
+      showToast('داده‌ای برای کپی نیست', 'warning');
+      return;
+    }
+    navigator.clipboard.writeText(STATE.qrData).then(() => {
+      showToast('اطلاعات کپی شد', 'success');
+    }).catch(() => showToast('خطا در کپی', 'error'));
+  }
+
+  function saveCurrentQr() {
+    if (!STATE.qrData) {
+      showToast('ابتدا QR بسازید', 'warning');
+      return;
+    }
+    openModal('ذخیره QR', `
+      <div class="form-group">
+        <label>نام سفارشی</label>
+        <input type="text" id="save-name" placeholder="مثلاً وای‌فای خانه" value="${STATE.qrType}" />
+      </div>
+    `, [
+      { text: 'انصراف', class: 'btn-ghost', action: closeModal },
+      { text: 'ذخیره', class: 'btn-primary', action: () => {
+        const name = document.getElementById('save-name').value.trim() || STATE.qrType;
+        const item = {
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          name,
+          type: STATE.qrType,
+          data: STATE.qrData,
+          fg: STATE.fgColor,
+          bg: STATE.bgColor,
+          dots: STATE.dotsType,
+          corners: STATE.cornersType,
+          createdAt: new Date().toISOString()
+        };
+        STATE.saved.unshift(item);
+        saveSaved();
+        updateStats();
+        closeModal();
+        showToast('QR ذخیره شد', 'success');
+        if (STATE.page === 'saved') renderSaved();
+      }}
+    ]);
+  }
+
+  // ============================================================
+  // HISTORY & STATS
+  // ============================================================
+  function addToHistory(kind, type, data) {
+    const item = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      kind, // created | scanned
+      type,
+      data,
+      at: new Date().toISOString()
+    };
+    STATE.history.unshift(item);
+    if (STATE.history.length > 200) STATE.history.pop();
+    saveHistory();
+    if (kind === 'created') STATE.stats.created++;
+    if (kind === 'scanned') STATE.stats.scanned++;
+    STATE.stats.lastActivity = item.at;
+    saveStats();
+    updateStats();
+  }
+
+  function updateStats() {
+    document.getElementById('stat-created').textContent = STATE.stats.created;
+    document.getElementById('stat-scanned').textContent = STATE.stats.scanned;
+    document.getElementById('stat-saved').textContent = STATE.saved.length;
+    const last = STATE.stats.lastActivity;
+    document.getElementById('stat-last').textContent = last
+      ? new Date(last).toLocaleDateString('fa-IR')
+      : '—';
+    renderRecent();
+  }
+
+  function renderRecent() {
+    const el = document.getElementById('recent-list');
+    const items = STATE.history.slice(0, 5);
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><p>هنوز QR ای ساخته یا اسکن نشده است.</p></div>';
+      lucide.createIcons();
+      return;
+    }
+    el.innerHTML = items.map(it => `
+      <div class="card list-item" data-id="${it.id}">
+        <div class="info">
+          <div class="title">${escapeHtml(it.type)} · ${it.kind === 'created' ? 'ساخته' : 'اسکن'}</div>
+          <div class="meta">${formatDate(it.at)} · ${escapeHtml(truncate(it.data, 40))}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" data-act="copy" data-id="${it.id}" aria-label="کپی"><i data-lucide="copy"></i></button>
+        </div>
+      </div>
+    `).join('');
+    lucide.createIcons();
+    el.querySelectorAll('[data-act="copy"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const item = STATE.history.find(h => h.id === btn.dataset.id);
+        if (item) navigator.clipboard.writeText(item.data).then(() => showToast('کپی شد', 'success'));
+      });
+    });
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('history-list');
+    if (!STATE.history.length) {
+      el.innerHTML = '<div class="empty-state"><i data-lucide="inbox"></i><p>هنوز QR ای ساخته یا اسکن نشده است.</p></div>';
+      lucide.createIcons();
+      return;
+    }
+    el.innerHTML = STATE.history.map(it => `
+      <div class="card list-item">
+        <div class="info">
+          <div class="title">${escapeHtml(it.type)} · ${it.kind === 'created' ? 'ساخته‌شده' : 'اسکن‌شده'}</div>
+          <div class="meta">${formatDate(it.at)} · ${escapeHtml(truncate(it.data, 50))}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" data-act="view" data-id="${it.id}" aria-label="مشاهده"><i data-lucide="eye"></i></button>
+          <button class="btn btn-ghost btn-sm" data-act="copy" data-id="${it.id}" aria-label="کپی"><i data-lucide="copy"></i></button>
+          <button class="btn btn-ghost btn-sm" data-act="del" data-id="${it.id}" aria-label="حذف"><i data-lucide="trash-2"></i></button>
+        </div>
+      </div>
+    `).join('');
+    lucide.createIcons();
+    el.querySelectorAll('[data-act]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = STATE.history.find(h => h.id === btn.dataset.id);
+        if (!item) return;
+        if (btn.dataset.act === 'copy') {
+          navigator.clipboard.writeText(item.data).then(() => showToast('کپی شد', 'success'));
+        } else if (btn.dataset.act === 'del') {
+          STATE.history = STATE.history.filter(h => h.id !== item.id);
+          saveHistory();
+          renderHistory();
+          updateStats();
+          showToast('حذف شد', 'success');
+        } else if (btn.dataset.act === 'view') {
+          openModal('جزئیات', `<pre style="white-space:pre-wrap;word-break:break-all;font-size:13px;max-height:300px;overflow:auto">${escapeHtml(item.data)}</pre>`, [
+            { text: 'بستن', class: 'btn-ghost', action: closeModal }
+          ]);
+        }
+      });
+    });
+  }
+
+  function renderSaved() {
+    const el = document.getElementById('saved-list');
+    if (!STATE.saved.length) {
+      el.innerHTML = '<div class="empty-state"><i data-lucide="bookmark"></i><p>هنوز QR ذخیره‌شده‌ای ندارید.</p></div>';
+      lucide.createIcons();
+      return;
+    }
+    el.innerHTML = STATE.saved.map(it => `
+      <div class="card list-item">
+        <div class="info">
+          <div class="title">${escapeHtml(it.name)}</div>
+          <div class="meta">${escapeHtml(it.type)} · ${formatDate(it.createdAt)}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost btn-sm" data-act="load" data-id="${it.id}" aria-label="ویرایش"><i data-lucide="edit"></i></button>
+          <button class="btn btn-ghost btn-sm" data-act="dl" data-id="${it.id}" aria-label="دانلود"><i data-lucide="download"></i></button>
+          <button class="btn btn-ghost btn-sm" data-act="del" data-id="${it.id}" aria-label="حذف"><i data-lucide="trash-2"></i></button>
+        </div>
+      </div>
+    `).join('');
+    lucide.createIcons();
+    el.querySelectorAll('[data-act]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const item = STATE.saved.find(s => s.id === btn.dataset.id);
+        if (!item) return;
+        if (btn.dataset.act === 'del') {
+          STATE.saved = STATE.saved.filter(s => s.id !== item.id);
+          saveSaved();
+          renderSaved();
+          updateStats();
+          showToast('حذف شد', 'success');
+        } else if (btn.dataset.act === 'load') {
+          STATE.qrType = item.type;
+          STATE.qrData = item.data;
+          STATE.fgColor = item.fg || '#000000';
+          STATE.bgColor = item.bg || '#ffffff';
+          STATE.dotsType = item.dots || 'square';
+          STATE.cornersType = item.corners || 'square';
+          navigate('generate');
+          renderTypeForm();
+          // fill form if possible is complex; at least set data and render
+          setTimeout(() => {
+            renderQr(item.data);
+            document.getElementById('preview-meta').textContent = item.name + ' · ' + truncate(item.data, 40);
+            showToast('QR بارگذاری شد — می‌توانید دانلود یا ویرایش کنید', 'success');
+          }, 100);
+        } else if (btn.dataset.act === 'dl') {
+          const qr = new QRCodeStyling({
+            width: 512, height: 512, type: 'canvas', data: item.data,
+            dotsOptions: { color: item.fg || '#000', type: item.dots || 'square' },
+            backgroundOptions: { color: item.bg || '#fff' },
+            cornersSquareOptions: { type: item.corners === 'extra-rounded' ? 'extra-rounded' : (item.corners === 'dot' ? 'dot' : 'square'), color: item.fg || '#000' }
+          });
+          await qr.download({ name: 'QR-' + item.name, extension: 'png' });
+          showToast('دانلود شد', 'success');
+        }
+      });
+    });
+  }
+
+  // ============================================================
+  // QR SCANNER
+  // ============================================================
+  async function startCamera() {
+    try {
+      if (STATE.scanner) {
+        await stopCamera();
+      }
+      const devices = await Html5Qrcode.getCameras();
+      STATE.cameras = devices || [];
+      if (!STATE.cameras.length) {
+        showToast('دوربینی یافت نشد', 'error');
+        return;
+      }
+      STATE.currentCam = STATE.cameras.length > 1 ? 1 : 0; // prefer back
+      const camId = STATE.cameras[STATE.currentCam].id;
+      STATE.scanner = new Html5Qrcode('reader');
+      await STATE.scanner.start(
+        camId,
+        { fps: 10, qrbox: { width: 220, height: 220 }, aspectRatio: 1 },
+        onScanSuccess,
+        () => {}
+      );
+      document.getElementById('btn-start-cam').classList.add('hidden');
+      document.getElementById('btn-stop-cam').classList.remove('hidden');
+      if (STATE.cameras.length > 1) document.getElementById('btn-switch-cam').classList.remove('hidden');
+      // torch check
+      try {
+        const track = STATE.scanner.getRunningTrackCameraCapabilities?.();
+        if (track && track.torch) {
+          document.getElementById('btn-torch').classList.remove('hidden');
+        }
+      } catch (_) {}
+      document.getElementById('scan-result').classList.remove('show');
+    } catch (e) {
+      console.error(e);
+      showToast('دسترسی دوربین رد شد یا خطا رخ داد', 'error');
+    }
+  }
+
+  async function stopCamera() {
+    if (STATE.scanner) {
+      try {
+        if (STATE.scanner.isScanning) await STATE.scanner.stop();
+        STATE.scanner.clear();
+      } catch (_) {}
+      STATE.scanner = null;
+    }
+    document.getElementById('btn-start-cam').classList.remove('hidden');
+    document.getElementById('btn-stop-cam').classList.add('hidden');
+    document.getElementById('btn-switch-cam').classList.add('hidden');
+    document.getElementById('btn-torch').classList.add('hidden');
+    STATE.torchOn = false;
+  }
+
+  async function switchCamera() {
+    if (!STATE.cameras.length || STATE.cameras.length < 2) return;
+    STATE.currentCam = (STATE.currentCam + 1) % STATE.cameras.length;
+    await stopCamera();
+    await startCamera();
+  }
+
+  async function toggleTorch() {
+    if (!STATE.scanner) return;
+    try {
+      const caps = STATE.scanner.getRunningTrackCameraCapabilities?.();
+      if (caps && caps.torch) {
+        STATE.torchOn = !STATE.torchOn;
+        await STATE.scanner.applyVideoConstraints({ advanced: [{ torch: STATE.torchOn }] });
+      }
+    } catch (e) {
+      showToast('چراغ قوه پشتیبانی نمی‌شود', 'warning');
+    }
+  }
+
+  function onScanSuccess(decodedText) {
+    if (STATE.scanner && STATE.scanner.isScanning) {
+      STATE.scanner.pause(true);
+    }
+    handleScanResult(decodedText);
+  }
+
+  function handleScanResult(text) {
+    STATE.lastScan = text;
+    addToHistory('scanned', detectType(text), text);
+    const type = detectType(text);
+    document.getElementById('scan-type').textContent = type;
+    document.getElementById('scan-content').textContent = text; // safe: textContent
+    const openBtn = document.getElementById('btn-open-link');
+    if (type.includes('لینک') || text.startsWith('http') || text.startsWith('mailto:') || text.startsWith('tel:') || text.startsWith('sms:') || text.startsWith('geo:')) {
+      openBtn.classList.remove('hidden');
+      openBtn.onclick = () => {
+        if (confirm('آیا مطمئن هستید که می‌خواهید این لینک را باز کنید؟\n\n' + text.slice(0, 100))) {
+          window.open(text.startsWith('http') ? text : text, '_blank', 'noopener,noreferrer');
+        }
+      };
+    } else {
+      openBtn.classList.add('hidden');
+    }
+    document.getElementById('scan-result').classList.add('show');
+    showToast('QR شناسایی شد', 'success');
+  }
+
+  function detectType(text) {
+    if (/^https?:\/\//i.test(text)) return 'لینک خارجی';
+    if (/^mailto:/i.test(text)) return 'ایمیل';
+    if (/^tel:/i.test(text)) return 'تلفن';
+    if (/^sms:/i.test(text)) return 'پیامک';
+    if (/^WIFI:/i.test(text)) return 'Wi-Fi';
+    if (/^BEGIN:VCARD/i.test(text)) return 'مخاطب (vCard)';
+    if (/^geo:/i.test(text)) return 'موقعیت مکانی';
+    if (/^bitcoin:/i.test(text)) return 'Bitcoin';
+    if (/^ethereum:/i.test(text)) return 'Ethereum';
+    if (/^upi:\/\//i.test(text)) return 'UPI';
+    if (/wa\.me|whatsapp/i.test(text)) return 'WhatsApp';
+    if (/^BEGIN:VEVENT/i.test(text)) return 'رویداد';
+    try { JSON.parse(text); return 'JSON'; } catch (_) {}
+    return 'متن / داده';
+  }
+
+  async function scanFromImage(file) {
+    if (!file) return;
+    try {
+      const scanner = new Html5Qrcode('reader');
+      const result = await scanner.scanFile(file, true);
+      handleScanResult(result);
+      scanner.clear();
+    } catch (e) {
+      showToast('QR در تصویر یافت نشد', 'error');
+    }
+  }
+
+  // ============================================================
+  // FORM RENDERERS
+  // ============================================================
+  function renderTypeButtons() {
+    const grid = document.getElementById('type-grid');
+    grid.innerHTML = QR_TYPES.map(t => `
+      <button type="button" class="type-btn ${STATE.qrType === t.id ? 'active' : ''}" data-type="${t.id}">
+        <i data-lucide="${t.icon}"></i>
+        ${t.label}
+      </button>
+    `).join('');
+    lucide.createIcons();
+    grid.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        STATE.qrType = btn.dataset.type;
+        grid.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTypeForm();
+        updateQrPreview();
+      });
+    });
+  }
+
+  function renderTypeForm() {
+    const form = document.getElementById('type-form');
+    const t = STATE.qrType;
+    let html = '';
+    const input = (id, label, type = 'text', ph = '', val = '') =>
+      `<div class="form-group"><label for="${id}">${label}</label><input type="${type}" id="${id}" placeholder="${ph}" value="${val}" /></div>`;
+    const textarea = (id, label, ph = '') =>
+      `<div class="form-group"><label for="${id}">${label}</label><textarea id="${id}" rows="4" placeholder="${ph}"></textarea></div>`;
+
+    switch (t) {
+      case 'text':
+        html = textarea('f-text', 'متن', 'متن خود را وارد کنید…');
+        break;
+      case 'url':
+        html = input('f-url', 'آدرس سایت', 'url', 'example.com یا https://…');
+        break;
+      case 'email':
+        html = input('f-email', 'آدرس ایمیل', 'email', 'name@example.com') +
+          input('f-subject', 'موضوع', 'text') +
+          textarea('f-body', 'متن پیام');
+        break;
+      case 'phone':
+        html = input('f-phone', 'شماره تلفن', 'tel', '+98912…');
+        break;
+      case 'sms':
+        html = input('f-sms-phone', 'شماره تلفن', 'tel') + textarea('f-sms-body', 'متن پیام');
+        break;
+      case 'vcard':
+        html = `<div class="form-row">${input('f-fn', 'نام')}${input('f-ln', 'نام خانوادگی')}</div>` +
+          input('f-org', 'شرکت') + input('f-title', 'عنوان شغلی') +
+          input('f-tel', 'شماره تلفن', 'tel') + input('f-email', 'ایمیل', 'email') +
+          input('f-url', 'سایت', 'url') + input('f-addr', 'آدرس') + textarea('f-note', 'یادداشت');
+        break;
+      case 'wifi':
+        html = input('f-ssid', 'نام شبکه (SSID)') +
+          input('f-pass', 'رمز عبور', 'text') +
+          `<div class="form-group"><label>نوع امنیت</label>
+            <select id="f-enc">
+              <option value="WPA">WPA/WPA2</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">بدون رمز</option>
+            </select></div>
+          <div class="form-group"><div class="toggle-row">
+            <label style="margin:0">شبکه مخفی است؟</label>
+            <button type="button" class="toggle" id="f-hidden"></button>
+          </div></div>
+          <p class="text-sm text-muted">با اسکن این QR می‌توان اطلاعات اتصال به شبکه Wi-Fi را دریافت کرد.</p>`;
+        break;
+      case 'geo':
+        html = `<div class="form-row">${input('f-lat', 'Latitude', 'text', '35.6892')}${input('f-lng', 'Longitude', 'text', '51.3890')}</div>` +
+          input('f-place', 'نام مکان');
+        break;
+      case 'event':
+        html = input('f-ev-title', 'عنوان رویداد') + input('f-ev-loc', 'مکان') +
+          `<div class="form-row">${input('f-ev-start-date', 'تاریخ شروع', 'date')}${input('f-ev-start-time', 'ساعت شروع', 'time')}</div>` +
+          `<div class="form-row">${input('f-ev-end-date', 'تاریخ پایان', 'date')}${input('f-ev-end-time', 'ساعت پایان', 'time')}</div>` +
+          textarea('f-ev-desc', 'توضیحات');
+        break;
+      case 'whatsapp':
+        html = input('f-wa-phone', 'شماره تلفن (با کد کشور)', 'tel', '98912…') +
+          textarea('f-wa-msg', 'پیام اختیاری');
+        break;
+      case 'social':
+        html = `<div class="form-group"><label>شبکه</label>
+          <select id="f-social-net">${SOCIAL_PRESETS.map(p => `<option value="${p.id}">${p.label}</option>`).join('')}</select></div>` +
+          input('f-social-user', 'نام کاربری یا URL کامل', 'text', '@username یا لینک');
+        break;
+      case 'bitcoin':
+        html = input('f-btc-addr', 'آدرس Bitcoin') +
+          input('f-btc-amount', 'مبلغ (BTC)', 'text') +
+          input('f-btc-msg', 'برچسب / پیام');
+        break;
+      case 'ethereum':
+        html = input('f-eth-addr', 'آدرس Ethereum') +
+          input('f-eth-amount', 'مبلغ (Wei یا ETH)', 'text');
+        break;
+      case 'upi':
+        html = input('f-upi-id', 'UPI ID', 'text', 'name@upi') +
+          input('f-upi-name', 'نام') +
+          input('f-upi-amount', 'مبلغ', 'text') +
+          input('f-upi-note', 'یادداشت');
+        break;
+      case 'app':
+        html = input('f-app-link', 'لینک اپلیکیشن / Store', 'url', 'https://…');
+        break;
+      case 'json':
+      case 'custom':
+        html = textarea('f-custom', t === 'json' ? 'JSON' : 'داده سفارشی', 'هر داده‌ای…');
+        break;
+    }
+    form.innerHTML = html;
+    form.querySelectorAll('input, textarea, select').forEach(el => {
+      el.addEventListener('input', updateQrPreview);
+      el.addEventListener('change', updateQrPreview);
+    });
+    const hid = form.querySelector('#f-hidden');
+    if (hid) {
+      hid.addEventListener('click', () => {
+        hid.classList.toggle('on');
+        updateQrPreview();
+      });
+    }
+  }
+
+  // ============================================================
+  // UI HELPERS
+  // ============================================================
+  function showToast(msg, type = 'success') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transition = 'opacity 0.3s';
+      setTimeout(() => t.remove(), 300);
+    }, 2800);
+  }
+
+  function openModal(title, bodyHtml, actions) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').innerHTML = bodyHtml;
+    const actEl = document.getElementById('modal-actions');
+    actEl.innerHTML = '';
+    actions.forEach(a => {
+      const b = document.createElement('button');
+      b.className = 'btn ' + a.class;
+      b.textContent = a.text;
+      b.addEventListener('click', a.action);
+      actEl.appendChild(b);
+    });
+    document.getElementById('modal-overlay').classList.add('show');
+  }
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+  function truncate(s, n) {
+    return s.length > n ? s.slice(0, n) + '…' : s;
+  }
+  function formatDate(iso) {
+    try {
+      return new Date(iso).toLocaleString('fa-IR', { dateStyle: 'short', timeStyle: 'short' });
+    } catch { return iso; }
+  }
+
+  // ============================================================
+  // NAVIGATION
+  // ============================================================
+  function navigate(page) {
+    if (STATE.page === 'scan' && page !== 'scan') {
+      stopCamera();
+    }
+    STATE.page = page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page)?.classList.add('active');
+    document.querySelectorAll('.nav-item, .bn-item').forEach(n => {
+      n.classList.toggle('active', n.dataset.page === page);
+    });
+    if (page === 'history') renderHistory();
+    if (page === 'saved') renderSaved();
+    if (page === 'dashboard') updateStats();
+    if (page === 'generate') {
+      renderTypeButtons();
+      renderTypeForm();
+      updateQrPreview();
+    }
+    window.scrollTo(0, 0);
+  }
+
+  // ============================================================
+  // THEME & LANG
+  // ============================================================
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', STATE.theme);
+    const tog = document.getElementById('theme-toggle');
+    if (tog) tog.classList.toggle('on', STATE.theme === 'light');
+  }
+  function applyLang() {
+    document.documentElement.lang = STATE.lang;
+    document.documentElement.dir = STATE.lang === 'fa' ? 'rtl' : 'ltr';
+    document.getElementById('lang-select').value = STATE.lang;
+    // minimal i18n for key labels could be expanded; structure supports it
+  }
+
+  // ============================================================
+  // IMPORT / EXPORT
+  // ============================================================
+  function exportData() {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      history: STATE.history,
+      saved: STATE.saved,
+      stats: STATE.stats
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'QR-OS-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('Backup دانلود شد', 'success');
+  }
+
+  function importData(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || typeof data !== 'object') throw new Error('invalid');
+        if (Array.isArray(data.history)) STATE.history = data.history.slice(0, 200);
+        if (Array.isArray(data.saved)) STATE.saved = data.saved.slice(0, 100);
+        if (data.stats && typeof data.stats === 'object') {
+          STATE.stats.created = Number(data.stats.created) || STATE.stats.created;
+          STATE.stats.scanned = Number(data.stats.scanned) || STATE.stats.scanned;
+          STATE.stats.lastActivity = data.stats.lastActivity || STATE.stats.lastActivity;
+        }
+        saveHistory();
+        saveSaved();
+        saveStats();
+        updateStats();
+        showToast('Backup با موفقیت وارد شد', 'success');
+      } catch (e) {
+        showToast('فایل Backup نامعتبر است', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ============================================================
+  // EVENTS
+  // ============================================================
+  function bindEvents() {
+    // Nav
+    document.querySelectorAll('[data-page]').forEach(el => {
+      el.addEventListener('click', () => navigate(el.dataset.page));
+    });
+    document.querySelectorAll('[data-goto]').forEach(el => {
+      el.addEventListener('click', () => navigate(el.dataset.goto));
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') navigate(el.dataset.goto); });
+    });
+
+    // Generate actions
+    document.getElementById('btn-dl-png').addEventListener('click', () => downloadQr('png'));
+    document.getElementById('btn-dl-svg').addEventListener('click', () => downloadQr('svg'));
+    document.getElementById('btn-copy-data').addEventListener('click', copyQrData);
+    document.getElementById('btn-save-qr').addEventListener('click', saveCurrentQr);
+
+    // Customization
+    document.getElementById('qr-size').addEventListener('change', e => {
+      STATE.size = +e.target.value;
+      updateQrPreview();
+    });
+    document.getElementById('qr-ec').addEventListener('change', e => {
+      STATE.ecLevel = e.target.value;
+      updateQrPreview();
+    });
+    document.getElementById('qr-fg').addEventListener('input', e => {
+      STATE.fgColor = e.target.value;
+      document.getElementById('qr-fg-hex').value = e.target.value;
+      updateQrPreview();
+    });
+    document.getElementById('qr-fg-hex').addEventListener('change', e => {
+      let v = e.target.value;
+      if (!v.startsWith('#')) v = '#' + v;
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+        STATE.fgColor = v;
+        document.getElementById('qr-fg').value = v;
+        updateQrPreview();
+      }
+    });
+    document.getElementById('qr-bg').addEventListener('input', e => {
+      STATE.bgColor = e.target.value;
+      document.getElementById('qr-bg-hex').value = e.target.value;
+      updateQrPreview();
+    });
+    document.getElementById('qr-bg-hex').addEventListener('change', e => {
+      let v = e.target.value;
+      if (!v.startsWith('#')) v = '#' + v;
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+        STATE.bgColor = v;
+        document.getElementById('qr-bg').value = v;
+        updateQrPreview();
+      }
+    });
+    document.getElementById('qr-transparent').addEventListener('click', function () {
+      this.classList.toggle('on');
+      STATE.transparentBg = this.classList.contains('on');
+      updateQrPreview();
+    });
+    document.getElementById('dots-style').querySelectorAll('.style-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('dots-style').querySelectorAll('.style-opt').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        STATE.dotsType = btn.dataset.v;
+        updateQrPreview();
+      });
+    });
+    document.getElementById('corner-style').querySelectorAll('.style-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('corner-style').querySelectorAll('.style-opt').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        STATE.cornersType = btn.dataset.v;
+        updateQrPreview();
+      });
+    });
+    document.getElementById('logo-input').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 500 * 1024) {
+        showToast('لوگو بیش از حد بزرگ است و ممکن است QR Code به‌درستی اسکن نشود.', 'warning');
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        STATE.logoDataUrl = reader.result;
+        const img = document.getElementById('logo-preview');
+        img.src = reader.result;
+        img.classList.add('show');
+        document.getElementById('btn-remove-logo').classList.remove('hidden');
+        document.getElementById('qr-ec').value = 'H';
+        STATE.ecLevel = 'H';
+        updateQrPreview();
+      };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('btn-remove-logo').addEventListener('click', () => {
+      STATE.logoDataUrl = null;
+      document.getElementById('logo-preview').classList.remove('show');
+      document.getElementById('btn-remove-logo').classList.add('hidden');
+      document.getElementById('logo-input').value = '';
+      updateQrPreview();
+    });
+
+    // Scanner
+    document.getElementById('btn-start-cam').addEventListener('click', startCamera);
+    document.getElementById('btn-stop-cam').addEventListener('click', stopCamera);
+    document.getElementById('btn-switch-cam').addEventListener('click', switchCamera);
+    document.getElementById('btn-torch').addEventListener('click', toggleTorch);
+    document.getElementById('btn-copy-scan').addEventListener('click', () => {
+      if (STATE.lastScan) {
+        navigator.clipboard.writeText(STATE.lastScan).then(() => showToast('کپی شد', 'success'));
+      }
+    });
+    document.getElementById('btn-rescan').addEventListener('click', async () => {
+      document.getElementById('scan-result').classList.remove('show');
+      if (STATE.scanner && STATE.scanner.isScanning === false) {
+        try { await STATE.scanner.resume(); } catch (_) { await startCamera(); }
+      } else if (!STATE.scanner) {
+        await startCamera();
+      }
+    });
+    document.getElementById('scan-image-input').addEventListener('change', e => {
+      if (e.target.files[0]) scanFromImage(e.target.files[0]);
+    });
+
+    // History clear
+    document.getElementById('btn-clear-history').addEventListener('click', () => {
+      openModal('پاک کردن تاریخچه', '<p>آیا مطمئن هستید؟ این عمل قابل بازگشت نیست.</p>', [
+        { text: 'انصراف', class: 'btn-ghost', action: closeModal },
+        { text: 'پاک کردن', class: 'btn-danger', action: () => {
+          STATE.history = [];
+          saveHistory();
+          renderHistory();
+          updateStats();
+          closeModal();
+          showToast('تاریخچه پاک شد', 'success');
+        }}
+      ]);
+    });
+
+    // Settings
+    document.getElementById('theme-toggle').addEventListener('click', function () {
+      STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
+      applyTheme();
+      saveSettings();
+    });
+    document.getElementById('lang-select').addEventListener('change', e => {
+      STATE.lang = e.target.value;
+      applyLang();
+      saveSettings();
+      showToast(STATE.lang === 'fa' ? 'زبان فارسی فعال شد' : 'English selected', 'success');
+    });
+    document.getElementById('btn-export').addEventListener('click', exportData);
+    document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
+    document.getElementById('import-file').addEventListener('change', e => {
+      if (e.target.files[0]) importData(e.target.files[0]);
+      e.target.value = '';
+    });
+    document.getElementById('btn-clear-all').addEventListener('click', () => {
+      openModal('حذف تمام اطلاعات', '<p>تاریخچه، QRهای ذخیره‌شده و آمار پاک می‌شوند. ادامه می‌دهید؟</p>', [
+        { text: 'انصراف', class: 'btn-ghost', action: closeModal },
+        { text: 'حذف همه', class: 'btn-danger', action: () => {
+          STATE.history = [];
+          STATE.saved = [];
+          STATE.stats = { created: 0, scanned: 0, lastActivity: null };
+          saveHistory();
+          saveSaved();
+          saveStats();
+          updateStats();
+          closeModal();
+          showToast('همه اطلاعات پاک شد', 'success');
+        }}
+      ]);
+    });
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target.id === 'modal-overlay') closeModal();
+    });
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  function init() {
+    loadStorage();
+    applyTheme();
+    applyLang();
+    bindEvents();
+    updateStats();
+    renderTypeButtons();
+    renderTypeForm();
+    lucide.createIcons();
+    // cleanup on page hide
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && STATE.page === 'scan') stopCamera();
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  </script>
+</body>
+</html>
